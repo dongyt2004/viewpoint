@@ -1,0 +1,36 @@
+{
+  "name": "meeting",
+  "version": "1.0.0",
+  "description": "观点抽取系统",
+  "main": "client.js",
+  "scripts": {
+    "start": "node client.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+http://gitlab.ruoben.com:8008/dongyt2004/viewpoint.git"
+  },
+  "keywords": [
+    "观点抽取系统",
+    "AI",
+    "NLP（自然语言处理）"
+  ],
+  "author": "董玉涛",
+  "license": "ISC",
+  "bugs": {
+    "url": "http://gitlab.ruoben.com:8008/dongyt2004/viewpoint/issues"
+  },
+  "homepage": "http://gitlab.ruoben.com:8008/dongyt2004/viewpoint#readme",
+  "devDependencies": {
+    "parcel-bundler": "1.12.4"
+  },
+  "dependencies": {
+    "express": "4.17.1",
+    "request": "2.88.0",
+    "body-parser": "1.19.0",
+    "adaro": "1.0.4",
+    "lodash": "4.17.15",
+    "each-async": "1.1.1",
+    "levenshtein": "1.0.5"
+  }
+}
