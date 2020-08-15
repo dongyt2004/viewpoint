@@ -31,7 +31,7 @@ app.post("/", function (req, res) {
     var lines = text.replace(/(\n[\s\t]*\r*\n)/g, '\n').replace(/^[\n\r\n\t]*|[\n\r\n\t]*$/g, '').split('\n');
     eachAsync(lines, function(line, index, done) {
         request.post({
-            url: "http://triple.ruoben.com:8008",   // http://triple-svc.nlp:50000
+            url: "http://triple-svc.nlp:50000",   // http://triple.ruoben.com:8008
             headers: {
                 "Content-Type": "text/plain"
             },
