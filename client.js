@@ -31,7 +31,7 @@ app.post("/", function (req, res) {
     var lines = text.replace(/(\n[\s\t]*\r*\n)/g, '\n').replace(/^[\n\r\n\t]*|[\n\r\n\t]*$/g, '').split('\n');
     eachAsync(lines, function(line, index, done) {
         request.post({
-            url: "http://triple-svc.nlp:50000",   // http://triple.ruoben.com:8008
+            url: "http://triple.ruoben.com:8008",   // http://triple-svc.nlp:50000
             headers: {
                 "Content-Type": "text/plain"
             },
@@ -68,7 +68,7 @@ app.post("/", function (req, res) {
             console.log('spo=' + JSON.stringify(ordered_spos));  /////////////////
             var viewpoint = '';
             for(var line_no in ordered_spos) {
-                var viewpoint_start_index = -1;  // 观点的起始下标
+                var viewpoint_start_index = 10000000;  // 观点的起始下标
                 for(i=0; i<ordered_spos[line_no][0].length; i++) {
                     if ((typeof ordered_spos[line_no][0][i]['o']) !== 'string') {  // 如果宾语是[]，是一个宾语从句，一般代表观点
                         viewpoint_start_index = i;  // 找到观点的起始下标
@@ -100,7 +100,7 @@ app.post("/", function (req, res) {
                 */
                 var viewpoints = [];
                 var dedup_spos = dedup(ordered_spos[line_no][0], ordered_spos[line_no][1]);  // 去重
-                viewpoint_start_index = -1;  // 观点的起始下标
+                viewpoint_start_index = 0;  // 观点的起始下标
                 for(i=0; i<dedup_spos[0].length; i++) {
                     if ((typeof dedup_spos[0][i]['o']) !== 'string') {  // 如果宾语是[]，是一个宾语从句，一般代表观点
                         viewpoint_start_index = i;  // 找到观点的起始下标
@@ -174,7 +174,7 @@ function dedup(triples, init_triples) {
                         if (isNaN(ratio)) {
                             ratio = 0;
                         }
-                        if (ratio >= 0.5) {
+                        if (ratio >= 0.7) {
                             to_del_index.push(j);
                             break;
                         }
@@ -186,7 +186,7 @@ function dedup(triples, init_triples) {
                         if (isNaN(ratio)) {
                             ratio = 0;
                         }
-                        if (ratio >= 0.5) {
+                        if (ratio >= 0.7) {
                             to_del_index.push(i);
                             break;
                         }
