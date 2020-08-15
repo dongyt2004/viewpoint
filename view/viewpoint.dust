@@ -16,7 +16,7 @@
     <body>
         <div class="row" style="margin:15px;">
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <textarea id="input1" rows="8" class="form-control" style="width:100%;" placeholder="请填写文本，为每段抽取相应的观点"></textarea>
+                <textarea id="input1" rows="8" class="form-control" style="width:100%;" placeholder="请填写文本，会为每段提取主体、客体和观点"></textarea>
             </div>
         </div>
         <div class="row" style="margin:15px;">
