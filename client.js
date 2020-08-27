@@ -6,6 +6,23 @@ const path = require('path');
 const _ = require('lodash');
 const eachAsync = require('each-async');
 const Levenshtein = require('levenshtein');
+
+//判断当前字符串是否以str开始 先判断是否存在function是避免和js原生方法冲突，自定义方法的效率不如原生的高
+if (typeof String.prototype.startsWith != 'function') {
+    String.prototype.startsWith = function (str) {
+        return this.slice(0, str.length) === str;
+    };
+    console.log("为String类添加startsWith方法");
+}
+
+//判断当前字符串是否以str结束
+if (typeof String.prototype.endsWith != 'function') {
+    String.prototype.endsWith = function (str) {
+        return this.slice(-str.length) === str;
+    };
+    console.log("为String类添加endsWith方法");
+}
+
 /** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
 var app = express();
 app.engine('dust', adaro.dust({
@@ -46,7 +63,7 @@ app.post("/", function (req, res) {
                     var triples = [];
                     var init_triples = [];
                     for(var i = 0; i < spo.length; i++) {
-                        triples.push(flush(spo[i]));  // 去除各种符号的三元组
+                        triples.push(flush(spo[i]));  // 去除各种符号（只保留^）的三元组
                         init_triples.push(spo[i]);  // 原始带符号的三元组
                     }
                     spos[index] = [triples, init_triples];
@@ -104,7 +121,11 @@ app.post("/", function (req, res) {
                 for(i=viewpoint_start_index; i<dedup_spos[0].length; i++) {
                     if ((typeof dedup_spos[0][i]['o']) === 'string') {
                         if (dedup_spos[0][i]['s'] !== '' && dedup_spos[0][i]['o'] !== '') {
-                            viewpoints[line_index].push(dedup_spos[0][i]['s'] + dedup_spos[0][i]['p'] + dedup_spos[0][i]['o']);
+                            if (dedup_spos[0][i]['p'].indexOf('^') >= 0) {
+                                viewpoints[line_index].push(dedup_spos[0][i]['p'].replace(/\^/g, dedup_spos[0][i]['s']) + dedup_spos[0][i]['o']);
+                            } else {
+                                viewpoints[line_index].push(dedup_spos[0][i]['s'] + dedup_spos[0][i]['p'] + dedup_spos[0][i]['o']);
+                            }
                         }
                     } else {  // 宾语是宾语从句，代表观点
                         var obj_str = '';
@@ -117,7 +138,7 @@ app.post("/", function (req, res) {
                         if (i === viewpoint_start_index) {  // 第一个观点不加谓语
                             viewpoints[line_index].push(obj_str);
                         } else {
-                            viewpoints[line_index].push(dedup_spos[0][i]['p'] + obj_str);
+                            viewpoints[line_index].push(dedup_spos[0][i]['p'].replace(/\^/g, "") + obj_str);
                         }
 
                     }
@@ -287,7 +308,7 @@ function stringify(spo_object) {
     if ((typeof spo_object) === 'string') {
         s = spo_object;
     } else {
-        s = spo_object.s + spo_object.p;
+        s = spo_object.s + spo_object.p.replace(/\^/g, "");
         if ((typeof spo_object.o) === "string") {
             s += spo_object.o;
         } else {
@@ -299,17 +320,26 @@ function stringify(spo_object) {
     return s;
 }
 // 观点字符串化
-function stringify_viewpoint(spo_object, idx) {
+function stringify_viewpoint(spo_object) {
     var s = "";
     if ((typeof spo_object) === 'string') {
         s = spo_object;
     } else {
-        s = spo_object.s + spo_object.p;
+        if (spo_object.p.indexOf('^') >= 0) {
+            s = spo_object.p.replace(/\^/g, spo_object.s);
+        } else {
+            s = spo_object.s + spo_object.p;
+        }
         if ((typeof spo_object.o) === "string") {
             s += spo_object.o;
         } else {
             for(var index=0; index<spo_object.o.length; index++) {
-                s += stringify_viewpoint(spo_object.o[index]) + "，";
+                var vp = stringify_viewpoint(spo_object.o[index]);
+                if ((typeof spo_object.o[index]) === 'string' || vp.length >= 6) {
+                    s += vp + "，";
+                } else if (!s.endsWith('，')) {
+                    s += vp + "，";
+                }
             }
             if (s.length > 0) {
                 s = s.substr(0, s.length - 1);
