@@ -107,6 +107,35 @@ app.post("/", function (req, res) {
                     }
                 }
                 /*
+                客体  先不去重
+                */
+                objects[line_index] = '';
+                for(i=viewpoint_start_index; i<ordered_spos[line_no][0].length; i++) {
+                    if (i === viewpoint_start_index) {
+                        var objs = ordered_spos[line_no][0][i]['o'];
+                        if ((typeof objs) === 'string') {
+                            objects[line_index] = objs;
+                        } else {
+                            for(j=0; j<objs.length; j++) {
+                                objects[line_index] = get_keti_by_subject(objs[j], subjects[line_index]);
+                            }
+                        }
+                    } else {
+                        objects[line_index] = get_keti_by_subject(ordered_spos[line_no][0][i], subjects[line_index]);
+                    }
+                    if (objects[line_index] !== '') {
+                        break;
+                    }
+                }
+                if (objects[line_index] === '') {
+                    for(i=viewpoint_start_index; i<ordered_spos[line_no][0].length; i++) {
+                        objects[line_index] = get_keti_by_object(ordered_spos[line_no][0][i]);
+                        if (objects[line_index] !== '') {
+                            break;
+                        }
+                    }
+                }
+                /*
                 观点
                 */
                 viewpoints[line_index] = [];
@@ -145,84 +174,14 @@ app.post("/", function (req, res) {
                 }
             }
             console.log("主体=" + JSON.stringify(subjects));  //////////////////
+            console.log("客体=" + JSON.stringify(objects));  //////////////////
             console.log("观点=" + JSON.stringify(viewpoints));  //////////////////
-
             var result = '';
-            for (var i=1; i<=subjects.length; i++) {
-                result += '<span style="line-height: 10px;">' + i + '. 主体：' + subjects[i-1] + '<br>&nbsp;&nbsp;&nbsp;&nbsp;观点：' + JSON.stringify(viewpoints[i-1]) + '</span><br>';
+            for (i=1; i<=subjects.length; i++) {
+                result += '<span style="line-height: 10px;">' + i + '. 主体：' + subjects[i-1] + '<br>&nbsp;&nbsp;&nbsp;&nbsp;客体：' + objects[i-1] + '<br>&nbsp;&nbsp;&nbsp;&nbsp;观点：' + JSON.stringify(viewpoints[i-1]) + '</span><br>';
             }
             console.log('结果=' + result);  /////////////////
             res.status(200).json({'viewpoint': result});
-
-            /*
-            客体
-            */
-            /*eachAsync(viewpoints, function(viewpoint_array, index, done) {
-                objects[index] = '';
-                if (viewpoint_array.length > 0) {
-                    request.post({
-                        url: "http://extract.ruoben.com:8008",   // http://extract-svc.nlp:44444
-                        headers: {
-                            "Content-Type": "text/plain"
-                        },
-                        body: viewpoint_array[0],
-                        timeout: 600000
-                    }, function (err, res, extract) {
-                        if (err) {
-                            done(err.toString());
-                        } else {
-                            if (res.statusCode === 200) {
-                                extract = JSON.parse(extract);
-                                for(var i = 0; i < extract.events.length; i++) {
-                                    if (extract.events[i].subject !== '' && extract.events[i].predicate !== '' && extract.events[i]['object'] !== '') {
-                                        objects[index] = extract.events[i].subject.replace(/{/g, "").replace(/}/g, "").replace(/\[/g, "").replace(/]/g, "").replace(/</g, "").replace(/>/g, "").replace(/《/g, "").replace(/》/g, "").replace(/`/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/~/g, "").replace(/«/g, "").replace(/»/g, "").replace(/【/g, "").replace(/】/g, "");
-                                        break;
-                                    }
-                                }
-                                // if (objects[index] === '') {
-                                //     for(i=0; i<viewpoint_start_index; i++) {
-                                //         if (ordered_spos[line_no][0][i]['o'] !== '') {
-                                //             object = ordered_spos[line_no][0][i]['o'];
-                                //             break;
-                                //         }
-                                //     }
-                                //     if (object === '') {
-                                //         for(i=0; i<=viewpoint_start_index; i++) {
-                                //             if (ordered_spos[line_no][1][i]['p'].indexOf('`') >= 0) {
-                                //                 object = ordered_spos[line_no][1][i]['p'].slice(ordered_spos[line_no][1][i]['p'].indexOf('`') + 1, ordered_spos[line_no][1][i]['p'].lastIndexOf('`'));
-                                //             } else if (ordered_spos[line_no][1][i]['p'].indexOf('[') >= 0) {
-                                //                 object = ordered_spos[line_no][1][i]['p'].slice(ordered_spos[line_no][1][i]['p'].indexOf('[') + 1, ordered_spos[line_no][1][i]['p'].indexOf(']'));
-                                //             } else if (ordered_spos[line_no][1][i]['p'].indexOf('《') >= 0) {
-                                //                 object = ordered_spos[line_no][1][i]['p'].slice(ordered_spos[line_no][1][i]['p'].indexOf('《') + 1, ordered_spos[line_no][1][i]['p'].indexOf('》'));
-                                //             } else {
-                                //                 object = ordered_spos[line_no][0][i]['p'];
-                                //             }
-                                //         }
-                                //     }
-                                // }
-                                done();
-                            } else {
-                                done("调用extract接口报错");
-                            }
-                        }
-                    });
-                } else {
-                    done();
-                }
-            }, function(error) {
-                if (error) {
-                    console.error(error);
-                    res.header('Content-Type', 'text/plain; charset=utf-8').status(500).end(error.toString());
-                } else {
-                    console.log("客体=" + JSON.stringify(objects));  //////////////////
-                    var result = '';
-                    for (var i=1; i<=subjects.length; i++) {
-                        result += '<span style="line-height: 10px;">' + i + '. 主体：' + subjects[i-1] + '<br>&nbsp;&nbsp;&nbsp;&nbsp;客体：' + objects[i-1] + '<br>&nbsp;&nbsp;&nbsp;&nbsp;观点：' + JSON.stringify(viewpoints[i-1]) + '</span><br>';
-                    }
-                    console.log('结果=' + result);  /////////////////
-                    res.status(200).json({'viewpoint': result});
-                }
-            });*/
         }
     });
 });
@@ -347,6 +306,43 @@ function stringify_viewpoint(spo_object) {
         }
     }
     return s;
+}
+// 取spo对象中的第一个不为空的主语
+function get_keti_by_subject(spo_object, subject) {
+    if ((typeof spo_object) === 'string') {
+        return "";
+    } else {
+        if (spo_object.s !== '' && spo_object.s !== '我们' && spo_object.s !== '这' && !spo_object.s.endsWith('上') && !spo_object.s.endsWith('下') && subject !=='' && spo_object.s !== subject) {
+            return spo_object.s;
+        }
+        if ((typeof spo_object.o) !== "string") {
+            for(var index=0; index<spo_object.o.length; index++) {
+                var obj = get_keti_by_subject(spo_object.o[index]);
+                if (obj !== '') {
+                    return obj;
+                }
+            }
+        }
+        return "";
+    }
+}
+// 取spo对象中的第一个不为空的宾语
+function get_keti_by_object(spo_object) {
+    if ((typeof spo_object) === 'string') {
+        return "";
+    } else {
+        if ((typeof spo_object.o) === "string") {
+            return spo_object.o;
+        } else {
+            for(var index=0; index<spo_object.o.length; index++) {
+                var obj = get_keti_by_object(spo_object.o[index]);
+                if (obj !== '') {
+                    return obj;
+                }
+            }
+            return "";
+        }
+    }
 }
 
 app.listen(1080, '0.0.0.0');
