@@ -169,7 +169,6 @@ app.post("/", function (req, res) {
                         } else {
                             viewpoints[line_index].push(dedup_spos[0][i]['p'].replace(/\^/g, "") + obj_str);
                         }
-
                     }
                 }
             }
