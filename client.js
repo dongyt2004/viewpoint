@@ -167,7 +167,11 @@ app.post("/", function (req, res) {
                         if (i === viewpoint_start_index) {  // 第一个观点不加谓语
                             viewpoints[line_index].push(obj_str);
                         } else {
-                            viewpoints[line_index].push(dedup_spos[0][i]['p'].replace(/\^/g, "") + obj_str);
+                            if (dedup_spos[0][i]['p'].indexOf('^') >= 0) {
+                                viewpoints[line_index].push(dedup_spos[0][i]['p'].replace(/\^/g, dedup_spos[0][i]['s']) + obj_str);
+                            } else {
+                                viewpoints[line_index].push(dedup_spos[0][i]['p'] + obj_str);
+                            }
                         }
                     }
                 }
@@ -266,7 +270,11 @@ function stringify(spo_object) {
     if ((typeof spo_object) === 'string') {
         s = spo_object;
     } else {
-        s = spo_object.s + spo_object.p.replace(/\^/g, "");
+        if (spo_object.p.indexOf('^') >= 0) {
+            s = spo_object.p.replace(/\^/g, spo_object.s);
+        } else {
+            s = spo_object.s + spo_object.p;
+        }
         if ((typeof spo_object.o) === "string") {
             s += spo_object.o;
         } else {
